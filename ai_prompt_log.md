@@ -105,3 +105,64 @@
 - **Phản hồi cốt lõi từ AI & Bài học rút ra:**
   - **Ở tầng cấu trúc bảng (DDL):** Định nghĩa rõ `NOT NULL DEFAULT 0.00` cho tất cả các cột chi phí tài chính (`security_deposit`, `late_fee`, `damage_fee`).
   - **Ở tầng truy vấn (DML):** Sử dụng hàm `COALESCE(late_fee, 0)` và `COALESCE(damage_fee, 0)` để luôn đảm bảo tính toán an toàn trong mọi trường hợp dữ liệu cũ bị NULL.
+
+---
+---
+
+# PHẦN 3: DỰ ÁN SÀN THƯƠNG MẠI ĐIỆN TỬ FLASHMART (TỐI ƯU HÓA JOIN)
+**Dự án:** Hệ thống Báo cáo Sàn TMĐT FlashMart  
+**Vai trò của AI:** SQL Tuning Assistant (Trợ lý phân tích truy vấn SQL)  
+
+---
+
+## 📌 Prompt 1 (FlashMart): Hành vi mặc định của từ khóa `JOIN` trong MySQL
+- **Ngữ cảnh:** Thẩm định đoạn script cũ khi lập trình viên chỉ viết `Customers c JOIN Orders o`.
+- **Prompt:**
+  > "Trong cơ sở dữ liệu MySQL, mặc định từ khóa `JOIN` (khi không ghi rõ `LEFT`, `RIGHT` hay `INNER`) sẽ hoạt động như thế nào? Nó sẽ bỏ qua hay giữ lại các bản ghi không có sự trùng khớp ở cả hai bảng theo lý thuyết tập hợp (Set Theory)?"
+- **Phản hồi cốt lõi từ AI & Bài học rút ra:**
+  - Trong chuẩn ANSI SQL và MySQL, từ khóa `JOIN` viết đơn độc mặc định chính là `INNER JOIN`.
+  - Phép toán này tương đương với phép giao của 2 tập hợp ($A \cap B$). Bất kỳ phần tử nào thuộc tập $A$ (khách hàng chưa mua) hoặc thuộc tập $B$ (sản phẩm chưa bán) không có cặp khóa ngoại tương ứng đều bị loại bỏ ngay lập tức.
+  - **Bài học:** Muốn bảo toàn tính toàn vẹn của bảng bên trái, bắt buộc phải chỉ định tường minh `LEFT JOIN` (hoặc `LEFT OUTER JOIN`).
+
+---
+
+## 📌 Prompt 2 (FlashMart): Sự khác biệt cốt lõi giữa `COUNT(*)` và `COUNT(cột)` trong `LEFT JOIN`
+- **Ngữ cảnh:** Báo cáo Marketing cần tính số đơn hàng của từng khách hàng, bao gồm cả khách có 0 đơn.
+- **Prompt:**
+  > "Khi tôi sử dụng `LEFT JOIN` và đếm số lượng đơn hàng bằng hàm `COUNT`, tôi nên dùng `COUNT(*)` hay `COUNT(o.order_id)`? Sự khác biệt khi kết quả phía bảng phụ trả về `NULL` là gì?"
+- **Phản hồi cốt lõi từ AI & Bài học rút ra:**
+  - `COUNT(*)`: Đếm tổng số hàng vật lý trong nhóm, không cần kiểm tra giá trị của từng cột có `NULL` hay không. Đối với khách hàng chưa mua hàng (`Charlie`), sau khi `LEFT JOIN` sẽ có 1 hàng với các cột bên `Orders` mang giá trị `NULL`. `COUNT(*)` vẫn đếm hàng này và trả về `1` (sai thực tế).
+  - `COUNT(o.order_id)`: Đếm số lượng giá trị không phải `NULL` (`NON-NULL`) trong cột được chỉ định. Vì `Charlie` không có đơn hàng nên `o.order_id` là `NULL`, hàm sẽ bỏ qua và trả về chính xác `0`.
+
+---
+
+## 📌 Prompt 3 (FlashMart): Phân tích hiệu năng Anti-Join vs Subquery (NOT IN / NOT EXISTS)
+- **Ngữ cảnh:** Tìm kiếm các sản phẩm tồn kho chưa từng được bán ra lần nào.
+- **Prompt:**
+  > "Hãy phân tích hiệu năng (Performance) và kế hoạch thực thi (Execution Plan) của việc dùng `LEFT JOIN ... WHERE o.order_id IS NULL` so với việc dùng subquery `NOT IN` hoặc `NOT EXISTS` khi tìm kiếm các bản ghi mồ côi."
+- **Phản hồi cốt lõi từ AI & Bài học rút ra:**
+  - `NOT IN`: Cực kỳ nguy hiểm nếu cột trong subquery chứa giá trị `NULL` (vì so sánh với `NULL` sẽ trả về `UNKNOWN`, làm toàn bộ câu truy vấn không trả về bản ghi nào).
+  - `LEFT JOIN ... WHERE IS NULL` (Anti-Join): Tận dụng được Index trên khóa ngoại của bảng `Orders`. MySQL Optimizer sẽ nhận diện mẫu truy vấn này và tự động dừng quét ngay khi tìm thấy bản ghi khớp đầu tiên (Not-exists optimization), giúp tốc độ truy vấn trên bảng hàng triệu dòng nhanh vượt trội.
+  - `NOT EXISTS`: Cũng rất tối ưu và dễ đọc logic, thường có hiệu năng tương đương Anti-Join trên MySQL 8.0+.
+
+---
+
+## 📌 Prompt 4 (FlashMart): Thuật toán tối ưu hóa JOIN của MySQL Optimizer
+- **Ngữ cảnh:** Nâng cao tư duy thiết kế và bảo vệ vấn đáp trước Chief Data Officer (CDO).
+- **Prompt:**
+  > "MySQL Optimizer thực hiện các phép JOIN bằng các thuật toán nào? Hãy giải thích cơ chế của Nested-Loop Join (NLJ), Block Nested-Loop (BNL) và Hash Join trong MySQL 8.0."
+- **Phản hồi cốt lõi từ AI & Bài học rút ra:**
+  - **Index Nested-Loop Join:** Bảng ngoài (Driving table) quét tuần tự, sau đó dùng Index của bảng trong để tìm kiếm nhanh $\rightarrow$ Hiệu năng tốt nhất khi có Index.
+  - **Block Nested-Loop (BNL):** Được dùng khi bảng trong không có Index. Đọc một khối các dòng từ bảng ngoài vào bộ nhớ đệm (`join_buffer_size`) rồi quét toàn bộ bảng trong một lần để so khớp.
+  - **Hash Join (Từ MySQL 8.0.18 trở đi):** Thay thế hoàn toàn BNL cho các phép kết nối đẳng thức (Equi-join) không có Index. Tạo bảng băm (In-memory Hash Table) từ bảng nhỏ hơn và duyệt qua bảng lớn hơn để tra cứu $\rightarrow$ Tăng tốc độ JOIN gấp nhiều lần trên cơ sở dữ liệu lớn.
+
+---
+
+## 📌 Prompt 5 (FlashMart): Giả lập FULL OUTER JOIN trong MySQL
+- **Ngữ cảnh:** Báo cáo tổng thể khách hàng và sản phẩm phục vụ giám sát toàn diện.
+- **Prompt:**
+  > "MySQL không hỗ trợ cú pháp `FULL OUTER JOIN`. Có cú pháp chuẩn nào cho phép tôi kết hợp kết quả của `LEFT JOIN` và `RIGHT JOIN` để giả lập `FULL OUTER JOIN` không?"
+- **Phản hồi cốt lõi từ AI & Bài học rút ra:**
+  - Sử dụng toán tử `UNION` giữa câu lệnh `LEFT JOIN` và câu lệnh `RIGHT JOIN`.
+  - Toán tử `UNION` tự động loại bỏ các bản ghi trùng lặp ở phần giao thoa ($A \cap B$), giữ lại toàn vẹn tập $A$ và tập $B$.
+  - Cú pháp chuẩn: `(SELECT ... FROM A LEFT JOIN B ON ...) UNION (SELECT ... FROM A RIGHT JOIN B ON ...);`.

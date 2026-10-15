@@ -36,6 +36,8 @@ Mã nguồn thực hành bài học Module 3 - Cơ sở dữ liệu quan hệ (R
 - [`autoride_db.sql`](file:///d:/a/autoride_db.sql): File kịch bản DDL/DML tái cấu trúc hệ thống thuê xe AutoRide theo UML Activity Diagram.
 - [`er_activity_mapping.md`](file:///d:/a/er_activity_mapping.md): Báo cáo đối chiếu nghiệp vụ, phân tích 3 Data Gaps và giải trình cột `damage_fee`.
 - [`select-query.sql`](file:///d:/a/select-query.sql): File kịch bản các câu lệnh SELECT và JOIN truy vấn CSDL `QuanLySinhVien`.
+- [`flashmart_reports.sql`](file:///d:/a/flashmart_reports.sql): Kịch bản MySQL tối ưu hóa truy vấn LEFT JOIN cho Marketing và Anti-Join cho Kho vận Sàn TMĐT FlashMart.
+- [`join_analysis.md`](file:///d:/a/join_analysis.md): Báo cáo phân tích tập hợp (Set Theory), giải trình COUNT(o.order_id) vs COUNT(*) và 3 câu hỏi vấn đáp.
 
 ---
 
@@ -466,6 +468,20 @@ File kịch bản: [`select-query.sql`](file:///d:/a/select-query.sql)
    JOIN Subject Sub ON M.SubId = Sub.SubId 
    WHERE Sub.SubName = 'CF';
    ```
+
+---
+
+## ⚡ [Dự án] Tối ưu hóa truy vấn JOIN & Anti-Join Sàn TMĐT FlashMart
+
+### 🎯 Mục tiêu
+- Phân tích và lựa chọn chính xác giữa `INNER JOIN`, `LEFT JOIN` và kỹ thuật `Anti-Join` (`LEFT JOIN ... WHERE IS NULL`) dựa trên lý thuyết tập hợp (Set Theory / Venn Diagram).
+- Sửa lỗi báo cáo Marketing: Đổi sang `LEFT JOIN` và dùng `COUNT(o.order_id)` để giữ lại khách hàng chưa từng mua hàng (`Charlie`) với `total_orders = 0`.
+- Sửa lỗi báo cáo Kho vận: Đổi sang `LEFT JOIN` kết hợp `WHERE o.order_id IS NULL` để lọc ra các sản phẩm ế chưa từng bán được (`Keyboard`).
+
+### 📄 Tài liệu chi tiết:
+- File kịch bản MySQL: [`flashmart_reports.sql`](file:///d:/a/flashmart_reports.sql)
+- Báo cáo phân tích tập hợp & trả lời vấn đáp: [`join_analysis.md`](file:///d:/a/join_analysis.md)
+- Nhật ký tương tác AI: [`ai_prompt_log.md`](file:///d:/a/ai_prompt_log.md#phần-3-dự-án-sàn-thương-mại-điện-tử-flashmart-tối-ưu-hóa-join)
 
 ---
 
