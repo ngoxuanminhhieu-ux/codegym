@@ -24,6 +24,8 @@ Mã nguồn thực hành bài học Module 3 - Cơ sở dữ liệu quan hệ (R
 - [`create_table.sql`](file:///d:/a/create_table.sql): Script tạo bảng `Class` và `Teacher` trong CSDL `student-management`.
 - [`quan_ly_don_hang.sql`](file:///d:/a/quan_ly_don_hang.sql): Triển khai mô hình cơ sở dữ liệu quan hệ hoàn chỉnh từ sơ đồ ERD Quản lý đơn đặt hàng và giao hàng.
 - [`erd_quan_ly_don_hang.jpg`](file:///d:/a/erd_quan_ly_don_hang.jpg): Ảnh sơ đồ mô hình thực thể ERD chuẩn hóa.
+- [`create-table.sql`](file:///d:/a/create-table.sql): Script tạo 4 bảng cho CSDL `QuanLyDiemThi` chuẩn theo bài thực hành.
+- [`QuanLyDiemThi.sql`](file:///d:/a/QuanLyDiemThi.sql): File kịch bản đầy đủ CSDL `QuanLyDiemThi` gồm tạo bảng, dữ liệu mẫu và truy vấn JOIN kiểm tra.
 
 ---
 
@@ -233,6 +235,82 @@ erDiagram
 #### Bước 4: Chuẩn hóa và rút gọn mô hình thực thể ERD
 - Do `Đơn vị đặt hàng` và `Đơn vị khách hàng` đều là các đối tác bên ngoài giao dịch với cửa hàng, nên được gộp thành một thực thể duy nhất là **`ĐƠN VỊ KHÁCH`** gồm các thuộc tính: `Mã ĐV`, `Tên ĐV`, `Địa chỉ`, `Điện thoại`.
 - Cả `Người đặt` và `Người nhận` đều tham chiếu tới `Đơn vị khách` thông qua khóa ngoại `MaDV`.
+
+---
+
+## 🏫 [Thực hành] Tạo bảng trong CSDL bằng câu lệnh (QuanLyDiemThi)
+
+### 📋 Cấu trúc 4 bảng trong CSDL `QuanLyDiemThi`:
+
+1. **Bảng `HocSinh`:**
+   - `MaHS`: `VARCHAR(20)` - Primary Key
+   - `TenHS`: `VARCHAR(50)`
+   - `NgaySinh`: `DATETIME`
+   - `Lop`: `VARCHAR(20)`
+   - `GT`: `VARCHAR(20)`
+
+2. **Bảng `MonHoc`:**
+   - `MaMH`: `VARCHAR(50)` - Primary Key
+   - `TenMH`: `VARCHAR(50)`
+   - `MaGV`: `VARCHAR(20)` - Foreign Key tham chiếu `GiaoVien(MaGV)`
+
+3. **Bảng `BangDiem` (Bảng trung gian quan hệ n - n giữa HocSinh và MonHoc):**
+   - `MaHS`: `VARCHAR(20)` - Khóa chính phức hợp, Khóa ngoại tham chiếu `HocSinh(MaHS)`
+   - `MaMH`: `VARCHAR(50)` - Khóa chính phức hợp, Khóa ngoại tham chiếu `MonHoc(MaMH)`
+   - `DiemThi`: `INT`
+   - `NgayKT`: `DATETIME`
+
+4. **Bảng `GiaoVien`:**
+   - `MaGV`: `VARCHAR(20)` - Primary Key
+   - `TenGV`: `VARCHAR(50)`
+   - `SDT`: `VARCHAR(10)`
+
+### 💻 Các bước thực hiện bằng SQL:
+
+```sql
+-- Bước 1: Tạo cơ sở dữ liệu
+CREATE DATABASE IF NOT EXISTS QuanLyDiemThi;
+
+-- Bước 2: Chọn cơ sở dữ liệu thao tác
+USE QuanLyDiemThi;
+
+-- Bước 3: Tạo bảng HocSinh
+CREATE TABLE IF NOT EXISTS HocSinh (
+    MaHS VARCHAR(20) PRIMARY KEY,
+    TenHS VARCHAR(50),
+    NgaySinh DATETIME,
+    Lop VARCHAR(20),
+    GT VARCHAR(20)
+);
+
+-- Bước 4: Tạo bảng MonHoc
+CREATE TABLE IF NOT EXISTS MonHoc (
+    MaMH VARCHAR(50) PRIMARY KEY,
+    TenMH VARCHAR(50),
+    MaGV VARCHAR(20)
+);
+
+-- Bước 5: Tạo bảng BangDiem (quan hệ n - n)
+CREATE TABLE IF NOT EXISTS BangDiem (
+    MaHS VARCHAR(20),
+    MaMH VARCHAR(50),
+    DiemThi INT,
+    NgayKT DATETIME,
+    PRIMARY KEY (MaHS, MaMH),
+    FOREIGN KEY (MaHS) REFERENCES HocSinh(MaHS),
+    FOREIGN KEY (MaMH) REFERENCES MonHoc(MaMH)
+);
+
+-- Bước 6: Tạo bảng GiaoVien
+CREATE TABLE IF NOT EXISTS GiaoVien (
+    MaGV VARCHAR(20) PRIMARY KEY,
+    TenGV VARCHAR(50),
+    SDT VARCHAR(10)
+);
+
+-- Bước 7: Bổ sung khóa ngoại FK_MaGV cho bảng MonHoc
+ALTER TABLE MonHoc ADD CONSTRAINT FK_MaGV FOREIGN KEY (MaGV) REFERENCES GiaoVien(MaGV);
+```
 
 ---
 
