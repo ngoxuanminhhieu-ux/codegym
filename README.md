@@ -21,6 +21,7 @@ Mã nguồn thực hành bài học Module 3 - Cơ sở dữ liệu quan hệ (R
 - [`QuanLySinhVien_Full.sql`](file:///d:/a/QuanLySinhVien_Full.sql): File kịch bản hoàn chỉnh (Tạo CSDL -> Tạo bảng -> Chèn dữ liệu -> `SELECT *` kiểm tra dữ liệu).
 - [`create_database.sql`](file:///d:/a/create_database.sql): Script tạo cơ sở dữ liệu `my_database1` trên MySQL Workbench bằng câu lệnh SQL.
 - [`drop_database.sql`](file:///d:/a/drop_database.sql): Script xóa cơ sở dữ liệu trên MySQL Workbench bằng câu lệnh SQL.
+- [`create_table.sql`](file:///d:/a/create_table.sql): Script tạo bảng `Class` và `Teacher` trong CSDL `student-management`.
 
 ---
 
@@ -69,6 +70,63 @@ Mã nguồn thực hành bài học Module 3 - Cơ sở dữ liệu quan hệ (R
 3. Nhấn vào biểu tượng **Tia sét ⚡** (hoặc `Ctrl + Enter`) để chạy câu lệnh.
 4. Kiểm tra cửa sổ **Output** bên dưới: dấu tích màu xanh báo hiệu thành công.
 5. Nhấp chuột phải vào tab **SCHEMAS** $\rightarrow$ chọn **Refresh All** để xác nhận CSDL đã biến mất.
+
+---
+
+## 📊 [Thực hành] Tạo bảng trên MySQL Workbench
+
+### 1. Bảng `Class`
+| Tên cột | Kiểu dữ liệu | Ràng buộc |
+|:---|:---|:---|
+| `id` | `INT` | Primary Key (PK), Not Null (NN), Auto Increment (AI) |
+| `name` | `VARCHAR(50)` | Cho phép Null |
+
+### 2. Bảng `Teacher`
+| Tên cột | Kiểu dữ liệu | Ràng buộc |
+|:---|:---|:---|
+| `id` | `INT` | Primary Key (PK), Not Null (NN), Auto Increment (AI) |
+| `name` | `VARCHAR(50)` | Cho phép Null |
+| `age` | `INT` | Cho phép Null |
+| `country` | `VARCHAR(50)` | Cho phép Null |
+
+### Cách 1: Sử dụng giao diện đồ họa (GUI)
+1. **Khởi động Workbench:** Đăng nhập vào MySQL Server.
+2. **Tạo bảng `Class`:**
+   - Tại tab **SCHEMAS**, mở rộng hoặc click chuột phải vào CSDL `student-management` (hoặc `student_management`), chọn **Create Table...**
+   - Đặt tên bảng tại ô **Table Name**: `Class`.
+   - Trong bảng cấu hình cột (Columns):
+     - Dòng 1: `id` | kiểu `INT` | tích chọn **PK** (Primary Key), **NN** (Not Null), **AI** (Auto Increment).
+     - Dòng 2: `name` | kiểu `VARCHAR(50)`.
+   - Nhấn nút **Apply** $\rightarrow$ xem câu lệnh SQL tự sinh $\rightarrow$ nhấn **Apply** $\rightarrow$ **Finish**.
+3. **Tạo bảng `Teacher`:**
+   - Click chuột phải vào `student-management` $\rightarrow$ chọn **Create Table...**
+   - Đặt tên bảng tại ô **Table Name**: `Teacher`.
+   - Cấu hình các cột:
+     - `id`: `INT` | tích chọn **PK**, **NN**, **AI**.
+     - `name`: `VARCHAR(50)`.
+     - `age`: `INT`.
+     - `country`: `VARCHAR(50)`.
+   - Nhấn **Apply** $\rightarrow$ **Apply** $\rightarrow$ **Finish**.
+
+### Cách 2: Sử dụng câu lệnh SQL
+Mở tab truy vấn mới (`Ctrl + T`) và thực thi:
+```sql
+USE `student-management`;
+
+CREATE TABLE IF NOT EXISTS `Class` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(50) NULL,
+    PRIMARY KEY (`id`)
+);
+
+CREATE TABLE IF NOT EXISTS `Teacher` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(50) NULL,
+    `age` INT NULL,
+    `country` VARCHAR(50) NULL,
+    PRIMARY KEY (`id`)
+);
+```
 
 ---
 
