@@ -35,6 +35,7 @@ Mã nguồn thực hành bài học Module 3 - Cơ sở dữ liệu quan hệ (R
 - [`QuanLyBanHang.sql`](file:///d:/a/QuanLyBanHang.sql): Script tạo CSDL `QuanLyBanHang`, 4 bảng có ràng buộc khóa ngoại và dữ liệu mẫu kiểm thử.
 - [`autoride_db.sql`](file:///d:/a/autoride_db.sql): File kịch bản DDL/DML tái cấu trúc hệ thống thuê xe AutoRide theo UML Activity Diagram.
 - [`er_activity_mapping.md`](file:///d:/a/er_activity_mapping.md): Báo cáo đối chiếu nghiệp vụ, phân tích 3 Data Gaps và giải trình cột `damage_fee`.
+- [`select-query.sql`](file:///d:/a/select-query.sql): File kịch bản các câu lệnh SELECT và JOIN truy vấn CSDL `QuanLySinhVien`.
 
 ---
 
@@ -426,6 +427,45 @@ erDiagram
 - File kịch bản MySQL: [`autoride_db.sql`](file:///d:/a/autoride_db.sql)
 - Báo cáo phân tích đối chiếu (Mapping Report): [`er_activity_mapping.md`](file:///d:/a/er_activity_mapping.md)
 - Nhật ký tương tác AI: [`ai_prompt_log.md`](file:///d:/a/ai_prompt_log.md#phần-2-dự-án-hệ-thống-cho-thuê-xe-tự-lái-autoride)
+
+---
+
+## 🔍 [Thực hành] Truy vấn dữ liệu với CSDL Quản lý sinh viên
+
+File kịch bản: [`select-query.sql`](file:///d:/a/select-query.sql)
+
+### 💻 Các câu truy vấn mẫu:
+1. **Hiển thị danh sách tất cả các học viên:**
+   ```sql
+   SELECT * FROM Student;
+   ```
+
+2. **Hiển thị danh sách các học viên đang theo học:**
+   ```sql
+   SELECT * FROM Student WHERE Status = true;
+   ```
+
+3. **Hiển thị danh sách các môn học có thời gian học nhỏ hơn 10 giờ:**
+   ```sql
+   SELECT * FROM Subject WHERE Credit < 10;
+   ```
+
+4. **Hiển thị danh sách học viên lớp A1 (JOIN Student và Class):**
+   ```sql
+   SELECT S.StudentId, S.StudentName, C.ClassName 
+   FROM Student S 
+   JOIN Class C ON S.ClassId = C.ClassID 
+   WHERE C.ClassName = 'A1';
+   ```
+
+5. **Hiển thị điểm môn CF của các học viên (JOIN 3 bảng Student, Mark và Subject):**
+   ```sql
+   SELECT S.StudentId, S.StudentName, Sub.SubName, M.Mark 
+   FROM Student S 
+   JOIN Mark M ON S.StudentId = M.StudentId 
+   JOIN Subject Sub ON M.SubId = Sub.SubId 
+   WHERE Sub.SubName = 'CF';
+   ```
 
 ---
 
