@@ -54,3 +54,54 @@
   > "Viết cho tôi các câu lệnh SQL SELECT kết hợp INNER JOIN giữa `Appointments`, `Patients`, `Doctors`, và `Prescriptions` để hiển thị danh sách các ca khám hoàn tất; đồng thời viết câu lệnh GROUP BY để tính tổng tiền cọc, tổng tiền phạt và số dư còn lại của từng trạng thái lịch hẹn."
 - **Phản hồi cốt lõi từ AI & Bài học rút ra:**
   - Tạo bảng truy vấn tổng hợp dùng `SUM(deposit_amount)`, `SUM(penalty_fee)` và `SUM(deposit_amount - penalty_fee)` để hỗ trợ kế toán đối soát ngay tức thì mà không cần xuất Excel tính toán thủ công.
+
+---
+---
+
+# PHẦN 2: DỰ ÁN HỆ THỐNG CHO THUÊ XE TỰ LÁI AUTORIDE
+**Dự án:** Ứng dụng Quản lý Thuê và Trả xe tự lái AutoRide  
+**Vai trò của AI:** Database Tuning Assistant (Trợ lý thiết kế và tối ưu CSDL)  
+
+---
+
+## 📌 Prompt 1 (AutoRide): Rủi ro sai số dấu phẩy động trong công thức hoàn cọc
+- **Ngữ cảnh:** Thiết kế các cột tiền cọc `security_deposit`, phí phạt trễ `late_fee`, phí sửa chữa `damage_fee`.
+- **Prompt:**
+  > "Trong bài toán hoàn trả tiền cọc cho thuê xe: `refund = security_deposit - late_fee - damage_fee`, việc dùng kiểu `FLOAT` hoặc `DOUBLE` trong MySQL có thể dẫn đến rủi ro sai lệch tài chính nào? Tại sao bắt buộc phải dùng `DECIMAL(12, 2)`?"
+- **Phản hồi cốt lõi từ AI & Bài học rút ra:**
+  - Kiểu `FLOAT` lưu trữ xấp xỉ nhị phân, khi thực hiện phép trừ trừ liên tiếp (ví dụ: `10000000.00 - 0.00 - 2000000.00`) có thể phát sinh các số thập phân siêu nhỏ ngầm (`7999999.999999999`), khiến hệ thống thanh toán tự động qua cổng ngân hàng bị từ chối hoặc sai lệch sổ sách kế toán.
+  - `DECIMAL(12, 2)` lưu trữ định dạng BCD (Binary Coded Decimal) bảo toàn độ chính xác tuyệt đối 100% đến từng hào/xu tiền tệ, hoàn toàn loại bỏ rủi ro sai số tích lũy.
+
+---
+
+## 📌 Prompt 2 (AutoRide): Phân tích quan hệ 1-1 vs 1-N cho bảng `Inspections`
+- **Ngữ cảnh:** Lựa chọn giữa gộp cột vào `Rentals`, quan hệ 1-1 hay quan hệ 1-N cho Biên bản kiểm tra xe.
+- **Prompt:**
+  > "Khi thiết kế bảng lưu trữ Biên bản kiểm tra xe (`Inspections`), tôi nên thiết kế quan hệ 1-1 hay 1-N với bảng `Rentals`? Hãy phân tích theo thực tế quy trình kiểm tra xe trước khi nhận (lúc giao xe) và sau khi trả (lúc thu hồi xe)."
+- **Phản hồi cốt lõi từ AI & Bài học rút ra:**
+  - Trong thực tế vận hành cho thuê xe, một hợp đồng luôn có ít nhất **2 lần kiểm tra xe**:
+    1. Lần 1: Kiểm tra trước bàn giao (ghi nhận mức xăng, đồng hồ ODO, các vết xước cũ sẵn có).
+    2. Lần 2: Kiểm tra khi khách trả xe (phát hiện vết xước/hư hỏng mới phát sinh so với lần 1).
+  - Do đó, thiết kế quan hệ **1 - N (`Rentals 1 --- N Inspections`)** là tối ưu nhất, tuân thủ chuẩn 3NF và cho phép lưu trữ lịch sử nhiều biên bản kiểm tra xe của cùng một hợp đồng thuê.
+
+---
+
+## 📌 Prompt 3 (AutoRide): Thiết kế Database Trigger bảo vệ trạng thái `BOOKED`
+- **Ngữ cảnh:** Giải quyết câu hỏi vấn đáp: Chặn không cho lập biên bản kiểm tra khi hợp đồng đang `BOOKED`.
+- **Prompt:**
+  > "Hãy hướng dẫn viết Database Trigger trên MySQL để chặn không cho nhân viên lập biên bản kiểm tra xe (`INSERT INTO Inspections`) nếu hợp đồng thuê xe tương ứng đang ở trạng thái `BOOKED` (khách hàng chưa nhận xe)."
+- **Phản hồi cốt lõi từ AI & Bài học rút ra:**
+  - Viết `BEFORE INSERT TRIGGER` trên bảng `Inspections`.
+  - Truy vấn trạng thái hợp đồng: `SELECT status INTO v_status FROM Rentals WHERE rental_id = NEW.rental_id;`.
+  - Nếu `v_status = 'BOOKED'`, dùng lệnh `SIGNAL SQLSTATE '45000'` kèm thông báo lỗi rõ ràng.
+  - **Ý nghĩa:** Đảm bảo toàn vẹn dữ liệu ở tầng thấp nhất (Database Level), dù Backend có lỗi logic hay hacker cố tình gọi API thì CSDL vẫn kiên quyết từ chối.
+
+---
+
+## 📌 Prompt 4 (AutoRide): Xử lý giá trị NULL trong tính toán hoàn tiền
+- **Ngữ cảnh:** Tránh rủi ro công thức hoàn cọc bị trả về NULL do các cột phí chưa cập nhật.
+- **Prompt:**
+  > "Trong MySQL, nếu `late_fee` hoặc `damage_fee` bị giá trị NULL thì phép tính `security_deposit - late_fee - damage_fee` sẽ trả về NULL. Làm thế nào để phòng chống điều này ở cả tầng cấu trúc bảng (DDL) và tầng truy vấn (DML)?"
+- **Phản hồi cốt lõi từ AI & Bài học rút ra:**
+  - **Ở tầng cấu trúc bảng (DDL):** Định nghĩa rõ `NOT NULL DEFAULT 0.00` cho tất cả các cột chi phí tài chính (`security_deposit`, `late_fee`, `damage_fee`).
+  - **Ở tầng truy vấn (DML):** Sử dụng hàm `COALESCE(late_fee, 0)` và `COALESCE(damage_fee, 0)` để luôn đảm bảo tính toán an toàn trong mọi trường hợp dữ liệu cũ bị NULL.

@@ -33,6 +33,8 @@ Mã nguồn thực hành bài học Module 3 - Cơ sở dữ liệu quan hệ (R
 - [`chuyen_doi_erd_sang_quan_he.md`](file:///d:/a/chuyen_doi_erd_sang_quan_he.md): Báo cáo 4 bước chuyển đổi chi tiết các bảng và thuộc tính đa trị.
 - [`erd_chuyen_doi_quan_he.sql`](file:///d:/a/erd_chuyen_doi_quan_he.sql): Kịch bản MySQL tạo 8 bảng quan hệ chuẩn hóa và dữ liệu mẫu kiểm thử.
 - [`QuanLyBanHang.sql`](file:///d:/a/QuanLyBanHang.sql): Script tạo CSDL `QuanLyBanHang`, 4 bảng có ràng buộc khóa ngoại và dữ liệu mẫu kiểm thử.
+- [`autoride_db.sql`](file:///d:/a/autoride_db.sql): File kịch bản DDL/DML tái cấu trúc hệ thống thuê xe AutoRide theo UML Activity Diagram.
+- [`er_activity_mapping.md`](file:///d:/a/er_activity_mapping.md): Báo cáo đối chiếu nghiệp vụ, phân tích 3 Data Gaps và giải trình cột `damage_fee`.
 
 ---
 
@@ -407,6 +409,23 @@ erDiagram
 
 ### 📄 File kịch bản SQL:
 - Mã nguồn đầy đủ DDL tạo bảng, ràng buộc và DML dữ liệu mẫu: [`QuanLyBanHang.sql`](file:///d:/a/QuanLyBanHang.sql)
+
+---
+
+## 🚗 [Dự án] Tái cấu trúc CSDL Thuê xe tự lái AutoRide (UML Activity Diagram to ERD)
+
+### 🎯 Mục tiêu
+- Đối chiếu giữa **UML Activity Diagram** quy trình "Thuê và Trả xe" với **ERD/MySQL** để phát hiện 3 khoảng trống dữ liệu (Data Gaps).
+- Chuẩn hóa cột `status` từ `VARCHAR` sang `ENUM('BOOKED', 'ACTIVE', 'COMPLETED', 'CANCELLED')`.
+- Bổ sung các cột tài chính cốt lõi: `security_deposit`, `late_fee`, `damage_fee` kiểu `DECIMAL(12, 2)`.
+- Xây dựng bảng mới `Inspections` lưu vết biên bản kiểm tra tình trạng xe.
+- Cài đặt **Database Trigger** chặn lập biên bản kiểm tra xe khi hợp đồng đang ở trạng thái `BOOKED`.
+- Lệnh tính tiền hoàn lại chuẩn xác: `refund = security_deposit - late_fee - damage_fee`.
+
+### 📄 Tài liệu chi tiết:
+- File kịch bản MySQL: [`autoride_db.sql`](file:///d:/a/autoride_db.sql)
+- Báo cáo phân tích đối chiếu (Mapping Report): [`er_activity_mapping.md`](file:///d:/a/er_activity_mapping.md)
+- Nhật ký tương tác AI: [`ai_prompt_log.md`](file:///d:/a/ai_prompt_log.md#phần-2-dự-án-hệ-thống-cho-thuê-xe-tự-lái-autoride)
 
 ---
 
