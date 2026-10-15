@@ -32,6 +32,7 @@ Mã nguồn thực hành bài học Module 3 - Cơ sở dữ liệu quan hệ (R
 - [`erd_to_relational_schema.jpg`](file:///d:/a/erd_to_relational_schema.jpg): Ảnh trực quan chuyển đổi mô hình ERD sang mô hình dữ liệu quan hệ.
 - [`chuyen_doi_erd_sang_quan_he.md`](file:///d:/a/chuyen_doi_erd_sang_quan_he.md): Báo cáo 4 bước chuyển đổi chi tiết các bảng và thuộc tính đa trị.
 - [`erd_chuyen_doi_quan_he.sql`](file:///d:/a/erd_chuyen_doi_quan_he.sql): Kịch bản MySQL tạo 8 bảng quan hệ chuẩn hóa và dữ liệu mẫu kiểm thử.
+- [`QuanLyBanHang.sql`](file:///d:/a/QuanLyBanHang.sql): Script tạo CSDL `QuanLyBanHang`, 4 bảng có ràng buộc khóa ngoại và dữ liệu mẫu kiểm thử.
 
 ---
 
@@ -363,6 +364,49 @@ ALTER TABLE MonHoc ADD CONSTRAINT FK_MaGV FOREIGN KEY (MaGV) REFERENCES GiaoVien
 ### 📄 Tài liệu chi tiết:
 - File kịch bản MySQL: [`erd_chuyen_doi_quan_he.sql`](file:///d:/a/erd_chuyen_doi_quan_he.sql)
 - Báo cáo phân tích 4 bước: [`chuyen_doi_erd_sang_quan_he.md`](file:///d:/a/chuyen_doi_erd_sang_quan_he.md)
+
+---
+
+## 🛒 [Bài tập] Xây dựng cơ sở dữ liệu Quản lý bán hàng (QuanLyBanHang)
+
+### 📊 Lược đồ thực thể quan hệ (Mermaid ERD)
+```mermaid
+erDiagram
+    Customer ||--o{ Order : "đặt hàng (1:n)"
+    Order ||--|{ OrderDetail : "bao gồm (1:n)"
+    Product ||--o{ OrderDetail : "được mua (1:n)"
+
+    Customer {
+        int cID PK
+        string cName
+        tinyint cAge
+    }
+    Order {
+        int oID PK
+        int cID FK
+        datetime oDate
+        int oTotalPrice
+    }
+    Product {
+        int pID PK
+        string pName
+        int pPrice
+    }
+    OrderDetail {
+        int oID PK,FK
+        int pID PK,FK
+        int odQTY
+    }
+```
+
+### 📋 Cấu trúc 4 bảng:
+1. **`Customer`**: `cID` (PK, AUTO_INCREMENT), `cName` (VARCHAR(25) NOT NULL), `cAge` (TINYINT).
+2. **`Order`**: `oID` (PK, AUTO_INCREMENT), `cID` (FK tham chiếu `Customer(cID)`), `oDate` (DATETIME), `oTotalPrice` (INT NULL).
+3. **`Product`**: `pID` (PK, AUTO_INCREMENT), `pName` (VARCHAR(25) NOT NULL), `pPrice` (INT NOT NULL).
+4. **`OrderDetail`**: `oID` (PK, FK), `pID` (PK, FK), `odQTY` (INT NOT NULL) - Bảng trung gian giải quyết quan hệ $n - m$ giữa `Order` và `Product`.
+
+### 📄 File kịch bản SQL:
+- Mã nguồn đầy đủ DDL tạo bảng, ràng buộc và DML dữ liệu mẫu: [`QuanLyBanHang.sql`](file:///d:/a/QuanLyBanHang.sql)
 
 ---
 
