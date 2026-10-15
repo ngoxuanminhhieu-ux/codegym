@@ -20,6 +20,7 @@ Mã nguồn thực hành bài học Module 3 - Cơ sở dữ liệu quan hệ (R
 - [`insert-into.sql`](file:///d:/a/insert-into.sql): Các câu lệnh `USE QuanLySinhVien;` và `INSERT INTO` vào 4 bảng theo đúng yêu cầu bài tập.
 - [`QuanLySinhVien_Full.sql`](file:///d:/a/QuanLySinhVien_Full.sql): File kịch bản hoàn chỉnh (Tạo CSDL -> Tạo bảng -> Chèn dữ liệu -> `SELECT *` kiểm tra dữ liệu).
 - [`create_database.sql`](file:///d:/a/create_database.sql): Script tạo cơ sở dữ liệu `my_database1` trên MySQL Workbench bằng câu lệnh SQL.
+- [`drop_database.sql`](file:///d:/a/drop_database.sql): Script xóa cơ sở dữ liệu trên MySQL Workbench bằng câu lệnh SQL.
 
 ---
 
@@ -40,6 +41,34 @@ Mã nguồn thực hành bài học Module 3 - Cơ sở dữ liệu quan hệ (R
    ```
 3. Nhấn biểu tượng hình tia sét ⚡ (hoặc tổ hợp phím `Ctrl + Enter` / `Ctrl + Shift + Enter`) để thực thi câu lệnh.
 4. Chuột phải vào vùng trống trong tab **SCHEMAS** chọn **Refresh All** để thấy `my_database1` xuất hiện.
+
+---
+
+## 🗑️ [Thực hành] Xóa CSDL trên MySQL Workbench
+
+> [!WARNING]
+> Thao tác xoá CSDL sẽ xóa toàn bộ các bảng, quan hệ và dữ liệu bên trong CSDL đó vĩnh viễn. Hãy kiểm tra kỹ trước khi xóa!
+
+### Cách 1: Sử dụng giao diện đồ họa (GUI)
+1. Bật MySQL Workbench và đăng nhập bằng tài khoản và mật khẩu.
+2. Tại tab **SCHEMAS** bên trái, tìm CSDL muốn xóa (ví dụ `my_database1`).
+3. Nhấp chuột phải vào tên CSDL và chọn **Drop Schema...**
+4. Một hộp thoại cảnh báo sẽ xuất hiện:
+   - Chọn **Review SQL**: Nếu muốn xem trước câu lệnh xóa.
+   - Chọn **Drop Now**: Để xóa ngay lập tức CSDL.
+5. Kiểm tra bảng **Output** phía dưới, nếu có dấu tích xanh là CSDL đã được xóa hoàn tất.
+
+### Cách 2: Sử dụng câu lệnh SQL trên Workbench
+1. Nhấn chọn biểu tượng **New Query Tab** (`Ctrl + T`) để mở cửa sổ soạn thảo mới.
+2. Nhập câu lệnh SQL sau:
+   ```sql
+   DROP DATABASE `my_database1`;
+   -- Hoặc an toàn hơn (không báo lỗi nếu CSDL không tồn tại):
+   -- DROP DATABASE IF EXISTS `my_database1`;
+   ```
+3. Nhấn vào biểu tượng **Tia sét ⚡** (hoặc `Ctrl + Enter`) để chạy câu lệnh.
+4. Kiểm tra cửa sổ **Output** bên dưới: dấu tích màu xanh báo hiệu thành công.
+5. Nhấp chuột phải vào tab **SCHEMAS** $\rightarrow$ chọn **Refresh All** để xác nhận CSDL đã biến mất.
 
 ---
 
