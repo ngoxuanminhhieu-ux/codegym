@@ -19,6 +19,27 @@ Mã nguồn thực hành bài học Module 3 - Cơ sở dữ liệu quan hệ (R
 - [`QuanLySinhVien.sql`](file:///d:/a/QuanLySinhVien.sql): File tạo cơ sở dữ liệu `QuanLySinhVien` và tạo 4 bảng (`Class`, `Student`, `Subject`, `Mark`) từ bài thực hành trước.
 - [`insert-into.sql`](file:///d:/a/insert-into.sql): Các câu lệnh `USE QuanLySinhVien;` và `INSERT INTO` vào 4 bảng theo đúng yêu cầu bài tập.
 - [`QuanLySinhVien_Full.sql`](file:///d:/a/QuanLySinhVien_Full.sql): File kịch bản hoàn chỉnh (Tạo CSDL -> Tạo bảng -> Chèn dữ liệu -> `SELECT *` kiểm tra dữ liệu).
+- [`create_database.sql`](file:///d:/a/create_database.sql): Script tạo cơ sở dữ liệu `my_database1` trên MySQL Workbench bằng câu lệnh SQL.
+
+---
+
+## 🛠️ [Thực hành] Tạo CSDL trên MySQL Workbench
+
+### Cách 1: Sử dụng giao diện đồ họa (GUI)
+1. Mở MySQL Workbench và kết nối tới MySQL Server (nhập mật khẩu tài khoản `root`).
+2. Nhìn sang bảng bên trái tại tab **SCHEMAS**, click vào biểu tượng **Create a new schema in the connected server** (biểu tượng hình cái đĩa trụ có dấu `+` nhỏ).
+3. Nhập tên CSDL mới: `my_database1`.
+4. (Tùy chọn) Chọn **Charset: utf8mb4** và **Collation: utf8mb4_general_ci** để hỗ trợ tiếng Việt đầy đủ.
+5. Nhấn **Apply**, xem lại câu lệnh SQL tự sinh rồi nhấn tiếp **Apply** $\rightarrow$ **Finish**.
+
+### Cách 2: Sử dụng câu lệnh SQL
+1. Nhấn vào biểu tượng **Create a new SQL tab for executing queries** (hoặc nhấn phím tắt `Ctrl + T`).
+2. Nhập câu lệnh:
+   ```sql
+   CREATE DATABASE `my_database1`;
+   ```
+3. Nhấn biểu tượng hình tia sét ⚡ (hoặc tổ hợp phím `Ctrl + Enter` / `Ctrl + Shift + Enter`) để thực thi câu lệnh.
+4. Chuột phải vào vùng trống trong tab **SCHEMAS** chọn **Refresh All** để thấy `my_database1` xuất hiện.
 
 ---
 
