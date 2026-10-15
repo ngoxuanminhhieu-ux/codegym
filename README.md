@@ -29,6 +29,9 @@ Mã nguồn thực hành bài học Module 3 - Cơ sở dữ liệu quan hệ (R
 - [`healthsync_db.sql`](file:///d:/a/healthsync_db.sql): File kịch bản DDL/DML tái cấu trúc hệ thống phòng khám HealthSync theo UML Activity Diagram.
 - [`consistency_report.md`](file:///d:/a/consistency_report.md): Báo cáo phân tích đối chiếu (Gap Analysis) chỉ ra 3 điểm vênh nghiêm trọng giữa UML và ERD cũ.
 - [`ai_prompt_log.md`](file:///d:/a/ai_prompt_log.md): Nhật ký đối thoại và khai thác AI phục vụ thiết kế dữ liệu và tối ưu hóa hệ thống.
+- [`erd_to_relational_schema.jpg`](file:///d:/a/erd_to_relational_schema.jpg): Ảnh trực quan chuyển đổi mô hình ERD sang mô hình dữ liệu quan hệ.
+- [`chuyen_doi_erd_sang_quan_he.md`](file:///d:/a/chuyen_doi_erd_sang_quan_he.md): Báo cáo 4 bước chuyển đổi chi tiết các bảng và thuộc tính đa trị.
+- [`erd_chuyen_doi_quan_he.sql`](file:///d:/a/erd_chuyen_doi_quan_he.sql): Kịch bản MySQL tạo 8 bảng quan hệ chuẩn hóa và dữ liệu mẫu kiểm thử.
 
 ---
 
@@ -330,6 +333,36 @@ ALTER TABLE MonHoc ADD CONSTRAINT FK_MaGV FOREIGN KEY (MaGV) REFERENCES GiaoVien
 - File SQL triển khai và mô phỏng kịch bản: [`healthsync_db.sql`](file:///d:/a/healthsync_db.sql)
 - Báo cáo phân tích đối chiếu (Gap Analysis): [`consistency_report.md`](file:///d:/a/consistency_report.md)
 - Nhật ký tương tác AI (Prompt Log): [`ai_prompt_log.md`](file:///d:/a/ai_prompt_log.md)
+
+---
+
+## 🔄 [Bài tập] Chuyển đổi mô hình ERD sang mô hình dữ liệu quan hệ
+
+### 🖼️ Sơ đồ chuyển đổi
+![Sơ đồ chuyển đổi ERD sang mô hình quan hệ](file:///d:/a/erd_to_relational_schema.jpg)
+
+### 📋 4 Bước chuyển đổi chuẩn:
+1. **Bước 1: Xác định thực thể:** 5 thực thể mạnh (`PHIEUXUAT`, `VATTU`, `PHIEUNHAP`, `DONDH`, `NHACC`).
+2. **Bước 2: Xác định mối quan hệ:**
+   - Quan hệ $1 - n$ (`NHACC` $\rightarrow$ `DONDH`): Bảng `DONDH` nhận `MaNCC` làm Khóa ngoại.
+   - Quan hệ $n - m$ (`PHIEUXUAT` - `VATTU`): Sinh bảng trung gian `CHITIET_PHIEUXUAT(SoPX, MaVT, DGXuat, SLXuat)`.
+   - Quan hệ $n - m$ (`PHIEUNHAP` - `VATTU`): Sinh bảng trung gian `CHITIET_PHIEUNHAP(SoPN, MaVT, DGNhap, SLNhap)`.
+   - Quan hệ $n - m$ (`DONDH` - `VATTU`): Sinh bảng trung gian `CHITIET_DONDH(SoDH, MaVT)`.
+3. **Bước 3: Tách thuộc tính đa trị:** Thuộc tính `SDT` của `NHACC` tách thành bảng mới `NHACC_SDT(MaNCC, SDT)` với khóa chính phức hợp `(MaNCC, SDT)`.
+4. **Bước 4: Danh sách các bảng thu được (Lược đồ quan hệ):**
+   - `NHACC` ($\underline{\text{MaNCC}}$, TenNCC, DiaChi)
+   - `NHACC_SDT` ($\underline{\text{MaNCC}}$, $\underline{\text{SDT}}$)
+   - `DONDH` ($\underline{\text{SoDH}}$, NgayDH, $\text{MaNCC}$)
+   - `VATTU` ($\underline{\text{MaVT}}$, TenVT)
+   - `CHITIET_DONDH` ($\underline{\text{SoDH}}$, $\underline{\text{MaVT}}$)
+   - `PHIEUNHAP` ($\underline{\text{SoPN}}$, NgayNhap)
+   - `CHITIET_PHIEUNHAP` ($\underline{\text{SoPN}}$, $\underline{\text{MaVT}}$, DGNhap, SLNhap)
+   - `PHIEUXUAT` ($\underline{\text{SoPX}}$, NgayXuat)
+   - `CHITIET_PHIEUXUAT` ($\underline{\text{SoPX}}$, $\underline{\text{MaVT}}$, DGXuat, SLXuat)
+
+### 📄 Tài liệu chi tiết:
+- File kịch bản MySQL: [`erd_chuyen_doi_quan_he.sql`](file:///d:/a/erd_chuyen_doi_quan_he.sql)
+- Báo cáo phân tích 4 bước: [`chuyen_doi_erd_sang_quan_he.md`](file:///d:/a/chuyen_doi_erd_sang_quan_he.md)
 
 ---
 
