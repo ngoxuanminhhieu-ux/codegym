@@ -22,6 +22,8 @@ Mã nguồn thực hành bài học Module 3 - Cơ sở dữ liệu quan hệ (R
 - [`create_database.sql`](file:///d:/a/create_database.sql): Script tạo cơ sở dữ liệu `my_database1` trên MySQL Workbench bằng câu lệnh SQL.
 - [`drop_database.sql`](file:///d:/a/drop_database.sql): Script xóa cơ sở dữ liệu trên MySQL Workbench bằng câu lệnh SQL.
 - [`create_table.sql`](file:///d:/a/create_table.sql): Script tạo bảng `Class` và `Teacher` trong CSDL `student-management`.
+- [`quan_ly_don_hang.sql`](file:///d:/a/quan_ly_don_hang.sql): Triển khai mô hình cơ sở dữ liệu quan hệ hoàn chỉnh từ sơ đồ ERD Quản lý đơn đặt hàng và giao hàng.
+- [`erd_quan_ly_don_hang.jpg`](file:///d:/a/erd_quan_ly_don_hang.jpg): Ảnh sơ đồ mô hình thực thể ERD chuẩn hóa.
 
 ---
 
@@ -127,6 +129,110 @@ CREATE TABLE IF NOT EXISTS `Teacher` (
     PRIMARY KEY (`id`)
 );
 ```
+
+---
+
+## 📐 [Thực hành] Xây dựng mô hình ERD Quản lý Đơn đặt hàng & Giao hàng
+
+### 🖼️ Sơ đồ ERD
+![Sơ đồ ERD Quản lý Đơn đặt hàng và Giao hàng](file:///d:/a/erd_quan_ly_don_hang.jpg)
+
+```mermaid
+erDiagram
+    DON_VI_KHACH ||--o{ NGUOI_DAT : "có"
+    DON_VI_KHACH ||--o{ NGUOI_NHAN : "có"
+    NGUOI_DAT ||--o{ DON_DAT_HANG : "đặt"
+    DON_DAT_HANG ||--|{ CHI_TIET_DAT : "bao gồm"
+    HANG ||--o{ CHI_TIET_DAT : "được đặt"
+    
+    DON_DAT_HANG ||--o{ PHIEU_GIAO_HANG : "giao theo"
+    NGUOI_GIAO ||--o{ PHIEU_GIAO_HANG : "thực hiện"
+    NGUOI_NHAN ||--o{ PHIEU_GIAO_HANG : "tiếp nhận"
+    NOI_GIAO ||--o{ PHIEU_GIAO_HANG : "giao tại"
+    
+    PHIEU_GIAO_HANG ||--|{ CHI_TIET_GIAO : "gồm có"
+    HANG ||--o{ CHI_TIET_GIAO : "được giao"
+
+    DON_VI_KHACH {
+        int MaDV PK
+        string TenDV
+        string DiaChi
+        string DienThoai
+    }
+    NGUOI_DAT {
+        int MaND PK
+        string HoTenND
+        int MaDV FK
+    }
+    NGUOI_NHAN {
+        int MaNN PK
+        string HoTenNN
+        int MaDV FK
+    }
+    NGUOI_GIAO {
+        int MaNG PK
+        string HoTenNG
+    }
+    NOI_GIAO {
+        int MaDDG PK
+        string TenNoiGiao
+    }
+    HANG {
+        int MaHang PK
+        string TenHang
+        string DvTinh
+        string MoTa
+    }
+    DON_DAT_HANG {
+        string SoDH PK
+        date NgayDat
+        int MaND FK
+    }
+    CHI_TIET_DAT {
+        string SoDH PK,FK
+        int MaHang PK,FK
+        int SoLuongDat
+    }
+    PHIEU_GIAO_HANG {
+        string SoPG PK
+        date NgayGiao
+        string SoDH FK
+        int MaNG FK
+        int MaNN FK
+        int MaDDG FK
+    }
+    CHI_TIET_GIAO {
+        string SoPG PK,FK
+        int MaHang PK,FK
+        int SoLuongGiao
+        decimal DonGia
+        decimal ThanhTien
+    }
+```
+
+### 📋 Các bước phân tích thiết kế:
+
+#### Bước 1: Liệt kê, chọn lọc thông tin
+- **Đơn đặt hàng:** Số ĐH, Tên ĐV, Địa chỉ, Điện thoại, Ngày đặt, Tên hàng, Mô tả, Đv tính, Số lượng, Người đặt hàng (Họ tên NĐ).
+- **Phiếu giao hàng:** Số PG, Tên ĐV, Địa chỉ, Nơi giao hàng (Tên nơi GH), Ngày giao, Tên hàng, Đv tính, Số lượng, Đơn giá, Thành tiền, Tên người nhận (Họ tên NN), Tên người giao (Họ tên NG).
+
+#### Bước 2: Xác định thực thể và thuộc tính
+- `ĐƠN VỊ ĐH`: Mã ĐV, Tên ĐV, Địa chỉ, Điện thoại.
+- `ĐƠN VỊ KH`: Mã ĐV, Tên ĐV, Địa chỉ.
+- `HÀNG`: Mã hàng, Tên hàng, Đv tính, Mô tả hàng.
+- `NGƯỜI ĐẶT`: Mã số NĐ, Họ tên NĐ.
+- `NƠI GIAO`: Mã số ĐĐG, Tên nơi giao.
+- `NGƯỜI NHẬN`: Mã số NN, Họ tên NN.
+- `NGƯỜI GIAO`: Mã số NG, Họ tên NG.
+
+#### Bước 3: Xác định các mối quan hệ
+- **Động từ Đặt:** Người đặt thuộc Đơn vị khách $\rightarrow$ Lập Đơn đặt hàng $\rightarrow$ Đặt các mặt Hàng (với số lượng đặt).
+- **Động từ Giao:** Người giao (nhân viên giao hàng) $\rightarrow$ Lập Phiếu giao hàng để giao Hàng cho Người nhận (thuộc Đơn vị khách) tại Nơi giao (với số lượng giao, đơn giá, thành tiền).
+- Quan hệ trực thuộc: `Người đặt` THUỘC `Đơn vị đặt hàng`, `Người nhận` THUỘC `Đơn vị khách hàng`.
+
+#### Bước 4: Chuẩn hóa và rút gọn mô hình thực thể ERD
+- Do `Đơn vị đặt hàng` và `Đơn vị khách hàng` đều là các đối tác bên ngoài giao dịch với cửa hàng, nên được gộp thành một thực thể duy nhất là **`ĐƠN VỊ KHÁCH`** gồm các thuộc tính: `Mã ĐV`, `Tên ĐV`, `Địa chỉ`, `Điện thoại`.
+- Cả `Người đặt` và `Người nhận` đều tham chiếu tới `Đơn vị khách` thông qua khóa ngoại `MaDV`.
 
 ---
 
