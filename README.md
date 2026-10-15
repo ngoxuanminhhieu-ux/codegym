@@ -26,6 +26,9 @@ Mã nguồn thực hành bài học Module 3 - Cơ sở dữ liệu quan hệ (R
 - [`erd_quan_ly_don_hang.jpg`](file:///d:/a/erd_quan_ly_don_hang.jpg): Ảnh sơ đồ mô hình thực thể ERD chuẩn hóa.
 - [`create-table.sql`](file:///d:/a/create-table.sql): Script tạo 4 bảng cho CSDL `QuanLyDiemThi` chuẩn theo bài thực hành.
 - [`QuanLyDiemThi.sql`](file:///d:/a/QuanLyDiemThi.sql): File kịch bản đầy đủ CSDL `QuanLyDiemThi` gồm tạo bảng, dữ liệu mẫu và truy vấn JOIN kiểm tra.
+- [`healthsync_db.sql`](file:///d:/a/healthsync_db.sql): File kịch bản DDL/DML tái cấu trúc hệ thống phòng khám HealthSync theo UML Activity Diagram.
+- [`consistency_report.md`](file:///d:/a/consistency_report.md): Báo cáo phân tích đối chiếu (Gap Analysis) chỉ ra 3 điểm vênh nghiêm trọng giữa UML và ERD cũ.
+- [`ai_prompt_log.md`](file:///d:/a/ai_prompt_log.md): Nhật ký đối thoại và khai thác AI phục vụ thiết kế dữ liệu và tối ưu hóa hệ thống.
 
 ---
 
@@ -311,6 +314,22 @@ CREATE TABLE IF NOT EXISTS GiaoVien (
 -- Bước 7: Bổ sung khóa ngoại FK_MaGV cho bảng MonHoc
 ALTER TABLE MonHoc ADD CONSTRAINT FK_MaGV FOREIGN KEY (MaGV) REFERENCES GiaoVien(MaGV);
 ```
+
+---
+
+## 🏥 [Dự án] Tái cấu trúc CSDL Phòng khám đa khoa HealthSync (UML Activity Diagram to ERD)
+
+### 🎯 Mục tiêu
+- Đối chiếu giữa **UML Activity Diagram** quy trình "Đặt lịch và Khám bệnh" với **ERD/MySQL** để phát hiện các lỗ hổng dữ liệu (Data Gaps).
+- Khắc phục triệt để anti-pattern `is_active BOOLEAN`, thay thế bằng `status ENUM('PENDING', 'CONFIRMED', 'CHECKED_IN', 'COMPLETED', 'CANCELLED')`.
+- Bổ sung các trường dữ liệu tài chính chính xác (`deposit_amount`, `penalty_fee` kiểu `DECIMAL(12,2)`) và `cancel_reason`.
+- Xây dựng bảng `Prescriptions` liên kết 1-1 với lịch hẹn hoàn tất.
+- Thiết lập **Database Trigger** để ngăn chặn kê đơn thuốc khi lịch hẹn chưa đạt trạng thái `COMPLETED`.
+
+### 📄 Tài liệu chi tiết:
+- File SQL triển khai và mô phỏng kịch bản: [`healthsync_db.sql`](file:///d:/a/healthsync_db.sql)
+- Báo cáo phân tích đối chiếu (Gap Analysis): [`consistency_report.md`](file:///d:/a/consistency_report.md)
+- Nhật ký tương tác AI (Prompt Log): [`ai_prompt_log.md`](file:///d:/a/ai_prompt_log.md)
 
 ---
 
