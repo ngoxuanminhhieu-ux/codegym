@@ -36,6 +36,7 @@ Mã nguồn thực hành bài học Module 3 - Cơ sở dữ liệu quan hệ (R
 - [`autoride_db.sql`](file:///d:/a/autoride_db.sql): File kịch bản DDL/DML tái cấu trúc hệ thống thuê xe AutoRide theo UML Activity Diagram.
 - [`er_activity_mapping.md`](file:///d:/a/er_activity_mapping.md): Báo cáo đối chiếu nghiệp vụ, phân tích 3 Data Gaps và giải trình cột `damage_fee`.
 - [`select-query.sql`](file:///d:/a/select-query.sql): File kịch bản các câu lệnh SELECT và JOIN truy vấn CSDL `QuanLySinhVien`.
+- [`query_quanlysinhvien.sql`](file:///d:/a/query_quanlysinhvien.sql): File kịch bản [Bài tập] Truy vấn dữ liệu nâng cao (LIKE, MONTH, BETWEEN, UPDATE, ORDER BY) trên CSDL `QuanLySinhVien`.
 - [`flashmart_reports.sql`](file:///d:/a/flashmart_reports.sql): Kịch bản MySQL tối ưu hóa truy vấn LEFT JOIN cho Marketing và Anti-Join cho Kho vận Sàn TMĐT FlashMart.
 - [`join_analysis.md`](file:///d:/a/join_analysis.md): Báo cáo phân tích tập hợp (Set Theory), giải trình COUNT(o.order_id) vs COUNT(*) và 3 câu hỏi vấn đáp.
 
@@ -467,6 +468,53 @@ File kịch bản: [`select-query.sql`](file:///d:/a/select-query.sql)
    JOIN Mark M ON S.StudentId = M.StudentId 
    JOIN Subject Sub ON M.SubId = Sub.SubId 
    WHERE Sub.SubName = 'CF';
+   ```
+
+---
+
+## 📝 [Bài tập] Truy vấn dữ liệu nâng cao với CSDL Quản lý sinh viên
+
+File kịch bản: [`query_quanlysinhvien.sql`](file:///d:/a/query_quanlysinhvien.sql)
+
+### 💻 Các câu lệnh truy vấn theo yêu cầu đề bài:
+
+1. **Hiển thị tất cả các sinh viên có tên bắt đầu bằng ký tự 'h':**
+   ```sql
+   SELECT * 
+   FROM Student 
+   WHERE StudentName LIKE 'h%';
+   ```
+
+2. **Hiển thị các thông tin lớp học có thời gian bắt đầu vào tháng 12:**
+   ```sql
+   SELECT * 
+   FROM Class 
+   WHERE MONTH(StartDate) = 12;
+   ```
+
+3. **Hiển thị tất cả các thông tin môn học có credit trong khoảng từ 3-5:**
+   ```sql
+   SELECT * 
+   FROM Subject 
+   WHERE Credit BETWEEN 3 AND 5;
+   ```
+
+4. **Thay đổi mã lớp (ClassID) của sinh viên có tên 'Hung' là 2:**
+   ```sql
+   SET SQL_SAFE_UPDATES = 0;
+
+   UPDATE Student 
+   SET ClassId = 2 
+   WHERE StudentName = 'Hung';
+   ```
+
+5. **Hiển thị các thông tin StudentName, SubName, Mark (sắp xếp điểm giảm dần, trùng sắp tên tăng dần):**
+   ```sql
+   SELECT S.StudentName, Sub.SubName, M.Mark 
+   FROM Student S 
+   JOIN Mark M ON S.StudentId = M.StudentId 
+   JOIN Subject Sub ON M.SubId = Sub.SubId 
+   ORDER BY M.Mark DESC, S.StudentName ASC;
    ```
 
 ---
