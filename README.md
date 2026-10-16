@@ -33,6 +33,7 @@ Mã nguồn thực hành bài học Module 3 - Cơ sở dữ liệu quan hệ (R
 - [`chuyen_doi_erd_sang_quan_he.md`](file:///d:/a/chuyen_doi_erd_sang_quan_he.md): Báo cáo 4 bước chuyển đổi chi tiết các bảng và thuộc tính đa trị.
 - [`erd_chuyen_doi_quan_he.sql`](file:///d:/a/erd_chuyen_doi_quan_he.sql): Kịch bản MySQL tạo 8 bảng quan hệ chuẩn hóa và dữ liệu mẫu kiểm thử.
 - [`QuanLyBanHang.sql`](file:///d:/a/QuanLyBanHang.sql): Script tạo CSDL `QuanLyBanHang`, 4 bảng có ràng buộc khóa ngoại và dữ liệu mẫu kiểm thử.
+- [`thao_tac_csdl_quan_ly_ban_hang.sql`](file:///d:/a/thao_tac_csdl_quan_ly_ban_hang.sql): File kịch bản [Bài tập] Thao tác với CSDL `QuanLyBanHang` (thêm dữ liệu, INNER JOIN, Anti-Join, GROUP BY tính tổng tiền hóa đơn).
 - [`autoride_db.sql`](file:///d:/a/autoride_db.sql): File kịch bản DDL/DML tái cấu trúc hệ thống thuê xe AutoRide theo UML Activity Diagram.
 - [`er_activity_mapping.md`](file:///d:/a/er_activity_mapping.md): Báo cáo đối chiếu nghiệp vụ, phân tích 3 Data Gaps và giải trình cột `damage_fee`.
 - [`select-query.sql`](file:///d:/a/select-query.sql): File kịch bản các câu lệnh SELECT và JOIN truy vấn CSDL `QuanLySinhVien`.
@@ -413,6 +414,55 @@ erDiagram
 
 ### 📄 File kịch bản SQL:
 - Mã nguồn đầy đủ DDL tạo bảng, ràng buộc và DML dữ liệu mẫu: [`QuanLyBanHang.sql`](file:///d:/a/QuanLyBanHang.sql)
+
+---
+
+## 🛍️ [Bài tập] Thao tác với CSDL Quản lý bán hàng (QuanLyBanHang)
+
+File kịch bản: [`thao_tac_csdl_quan_ly_ban_hang.sql`](file:///d:/a/thao_tac_csdl_quan_ly_ban_hang.sql)
+
+### 💻 4 Câu lệnh truy vấn theo yêu cầu đề bài:
+
+1. **Hiển thị các thông tin gồm `oID`, `oDate`, `oPrice` của tất cả các hóa đơn trong bảng `Order`:**
+   ```sql
+   SELECT 
+       oID, 
+       oDate, 
+       oTotalPrice AS oPrice 
+   FROM `Order`;
+   ```
+
+2. **Hiển thị danh sách khách hàng đã mua hàng và danh sách sản phẩm được mua bởi các khách:**
+   ```sql
+   SELECT DISTINCT 
+       c.cName AS CustomerName, 
+       p.pName AS ProductName
+   FROM Customer c
+   JOIN `Order` o ON c.cID = o.cID
+   JOIN OrderDetail od ON o.oID = od.oID
+   JOIN Product p ON od.pID = p.pID;
+   ```
+
+3. **Hiển thị tên những khách hàng không mua bất kỳ một sản phẩm nào (Anti-Join):**
+   ```sql
+   SELECT 
+       c.cName AS CustomerWithoutOrders
+   FROM Customer c
+   LEFT JOIN `Order` o ON c.cID = o.cID
+   WHERE o.oID IS NULL;
+   ```
+
+4. **Hiển thị mã hóa đơn, ngày bán và giá tiền của từng hóa đơn (`Giá = odQTY * pPrice`):**
+   ```sql
+   SELECT 
+       o.oID, 
+       o.oDate, 
+       SUM(od.odQTY * p.pPrice) AS TotalPrice
+   FROM `Order` o
+   JOIN OrderDetail od ON o.oID = od.oID
+   JOIN Product p ON od.pID = p.pID
+   GROUP BY o.oID, o.oDate;
+   ```
 
 ---
 
