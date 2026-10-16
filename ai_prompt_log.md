@@ -166,3 +166,68 @@
   - Sử dụng toán tử `UNION` giữa câu lệnh `LEFT JOIN` và câu lệnh `RIGHT JOIN`.
   - Toán tử `UNION` tự động loại bỏ các bản ghi trùng lặp ở phần giao thoa ($A \cap B$), giữ lại toàn vẹn tập $A$ và tập $B$.
   - Cú pháp chuẩn: `(SELECT ... FROM A LEFT JOIN B ON ...) UNION (SELECT ... FROM A RIGHT JOIN B ON ...);`.
+
+---
+---
+
+# PHẦN 4: DỰ ÁN VÍ ĐIỆN TỬ PAYFLOW (TỐI ƯU HÓA B-TREE INDEX & SARGABLE QUERY)
+**Dự án:** Hệ thống Thống kê Tài chính Ví điện tử PayFlow  
+**Vai trò của AI:** Database Tuning Assistant (Trợ lý phân tích hiệu năng truy vấn)  
+
+---
+
+## 📌 Prompt 1 (PayFlow): Tại sao bọc hàm ngày tháng lại vô hiệu hóa B-Tree Index?
+- **Ngữ cảnh:** Đánh giá câu truy vấn của Kế toán: `WHERE YEAR(created_at) = 2026 AND MONTH(created_at) = 6`.
+- **Prompt:**
+  > "Trong MySQL, nếu tôi đã tạo B-Tree Index cho một cột ngày tháng, nhưng trong mệnh đề WHERE tôi lại viết `WHERE YEAR(created_at) = 2026 AND MONTH(created_at) = 6`, tại sao MySQL lại từ chối sử dụng Index và phải quét toàn bộ bảng (Full Table Scan)?"
+- **Phản hồi cốt lõi từ AI & Bài học rút ra:**
+  - B-Tree Index lưu trữ các giá trị của cột `created_at` đã được sắp xếp theo thứ tự nguyên bản (raw datetime).
+  - Khi bọc hàm `YEAR()` hoặc `MONTH()` quanh cột, MySQL không thể suy diễn được giá trị đầu vào ban đầu nếu không tính toán trước. CSDL buộc phải duyệt qua từng dòng một của bảng (hàng triệu dòng), áp hàm tính toán cho từng dòng rồi mới so sánh với giá trị `2026` hay `6`.
+  - Đây chính là **Non-SARGable (Not Search-Argument-Able)**.
+  - **Khắc phục:** Giữ nguyên vẹn cột ở vế so sánh và chuyển điều kiện sang dạng khoảng (Range): `created_at >= '2026-06-01' AND created_at < '2026-07-01'`.
+
+---
+
+## 📌 Prompt 2 (PayFlow): Quy tắc sắp xếp thứ tự các cột trong Composite Index
+- **Ngữ cảnh:** Thiết kế Composite Index trên 2 cột `transaction_type` và `created_at`.
+- **Prompt:**
+  > "Khi thiết kế một Composite Index trong MySQL cho 2 cột `(transaction_type, created_at)` phục vụ điều kiện `WHERE transaction_type = 'DEPOSIT' AND created_at >= ... AND created_at < ...`, thứ tự các cột trong Index có quan trọng không? Tôi nên đặt cột nào đứng trước để có hiệu suất tốt nhất?"
+- **Phản hồi cốt lõi từ AI & Bài học rút ra:**
+  - **Quy tắc vàng của Composite Index:** Cột tham gia phép so sánh đẳng thức (`=`) bắt buộc phải đặt trước, cột tham gia phép so sánh khoảng (Range: `>`, `<`, `BETWEEN`) phải đặt phía sau.
+  - Cụ thể: Phải tạo Index là `(transaction_type, created_at)`.
+  - **Lý do:** B-Tree sẽ dùng nhánh đầu tiên để định vị chính xác nhánh con chứa `transaction_type = 'DEPOSIT'`, sau đó quét một dải liên tục (Range Scan) các giá trị `created_at` trong tháng 6. Nếu đảo ngược lại thành `(created_at, transaction_type)`, MySQL chỉ dùng được Range Scan trên ngày tháng và không thể tận dụng tiếp cột `transaction_type` để lọc nhị phân.
+
+---
+
+## 📌 Prompt 3 (PayFlow): Bản chất của Index Seek vs Index Scan trên cây B-Tree
+- **Ngữ cảnh:** Tìm hiểu sâu về cơ chế vật lý của B-Tree Index để bảo vệ giải pháp trước CTO.
+- **Prompt:**
+  > "Hãy giải thích sự khác biệt giữa Index Seek và Index Scan trên cấu trúc cây B-Tree trong hệ quản trị cơ sở dữ liệu. Tại sao Index Seek lại có độ phức tạp thuật toán O(log N)?"
+- **Phản hồi cốt lõi từ AI & Bài học rút ra:**
+  - **Index Seek:** Đi từ nút gốc (Root) qua các nút trung gian (Branch/Non-leaf) bằng thuật toán tìm kiếm nhị phân để chạm tới đúng vị trí bản ghi đầu tiên tại nút lá (Leaf node). Độ phức tạp thuật toán là $O(\log N)$, chỉ mất 3-4 lần đọc khối đĩa cho bảng hàng chục triệu dòng.
+  - **Index Scan:** Duyệt qua toàn bộ danh sách liên kết của các nút lá (Leaf nodes) từ đầu đến cuối (hoặc một dải lớn). Độ phức tạp là $O(N)$ trên số nút lá.
+  - **Ý nghĩa:** Câu truy vấn SARGable cho phép thực hiện **Index Seek** để định vị điểm bắt đầu và điểm kết thúc của tháng 6, chỉ đọc đúng dải dữ liệu cần thiết.
+
+---
+
+## 📌 Prompt 4 (PayFlow): Tối ưu hóa đỉnh cao với Covering Index
+- **Ngữ cảnh:** Đọc hiểu trường `Extra` trong EXPLAIN khi xuất hiện `Using where; Using index`.
+- **Prompt:**
+  > "Trong kết quả EXPLAIN, dòng Extra hiện chữ `Using index condition` khác gì với `Using index` (Covering Index)? Làm thế nào để loại bỏ hoàn toàn việc truy cập vào bảng chính (Table Lookup)?"
+- **Phản hồi cốt lõi từ AI & Bài học rút ra:**
+  - `Using index condition` (Index Condition Pushdown - ICP): MySQL dùng Index để lọc dữ liệu ở tầng lưu trữ, nhưng vẫn phải quay về Clustered Index trên đĩa để lấy các cột khác (`amount`).
+  - `Using index` (Covering Index): Tất cả các cột được yêu cầu trong câu truy vấn (`transaction_type`, `created_at`, `amount`) đều đã nằm trọn vẹn trong cây Index phụ.
+  - **Lợi ích:** Database chỉ đọc dữ liệu trực tiếp trong bộ nhớ đệm RAM của Index, **không cần tốn bất kỳ một lượt I/O nào xuống ổ đĩa** để đọc bảng chính, mang lại tốc độ phản hồi tính toán tức thì.
+
+---
+
+## 📌 Prompt 5 (PayFlow): Đo lường thời gian thực thi chuẩn xác bằng MySQL Profiling
+- **Ngữ cảnh:** Thay thế việc ước lượng thời gian cảm tính bằng công cụ đo lường microsecond chính xác của MySQL.
+- **Prompt:**
+  > "Làm thế nào để đo lường chính xác thời gian thực thi (Execution Time) của một câu lệnh SQL chi tiết đến từng microsecond trong MySQL thay vì chỉ nhìn vào Execution Plan?"
+- **Phản hồi cốt lõi từ AI & Bài học rút ra:**
+  - Bật tính năng đo lường: `SET profiling = 1;`
+  - Chạy câu lệnh SQL cần đo kiểm.
+  - Xem danh sách câu lệnh vừa thực thi: `SHOW PROFILES;`
+  - Xem chi tiết từng giai đoạn CPU/IO của truy vấn: `SHOW PROFILE FOR QUERY 1;` (phân tích thời gian mở bảng, tối ưu hóa, thực thi và dọn dẹp).
+

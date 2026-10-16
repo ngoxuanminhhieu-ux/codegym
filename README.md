@@ -40,6 +40,8 @@ Mã nguồn thực hành bài học Module 3 - Cơ sở dữ liệu quan hệ (R
 - [`query_quanlysinhvien.sql`](file:///d:/a/query_quanlysinhvien.sql): File kịch bản [Bài tập] Truy vấn dữ liệu nâng cao (LIKE, MONTH, BETWEEN, UPDATE, ORDER BY) trên CSDL `QuanLySinhVien`.
 - [`flashmart_reports.sql`](file:///d:/a/flashmart_reports.sql): Kịch bản MySQL tối ưu hóa truy vấn LEFT JOIN cho Marketing và Anti-Join cho Kho vận Sàn TMĐT FlashMart.
 - [`join_analysis.md`](file:///d:/a/join_analysis.md): Báo cáo phân tích tập hợp (Set Theory), giải trình COUNT(o.order_id) vs COUNT(*) và 3 câu hỏi vấn đáp.
+- [`payflow_optimized.sql`](file:///d:/a/payflow_optimized.sql): Kịch bản MySQL tối ưu hóa truy vấn Non-SARGable và B-Tree Index cho Ví điện tử PayFlow.
+- [`explain_analysis.md`](file:///d:/a/explain_analysis.md): Báo cáo đối chiếu chỉ số EXPLAIN (ALL vs range), Covering Index và 3 câu hỏi vấn đáp CTO.
 
 ---
 
@@ -640,6 +642,22 @@ SELECT * FROM Student;
 SELECT * FROM Subject;
 SELECT * FROM Mark;
 ```
+
+---
+
+## 💳 [Dự án] Tối ưu hóa truy vấn Non-SARGable và B-Tree Index Ví điện tử PayFlow
+
+### 🎯 Mục tiêu
+- **Nhận diện điểm nghẽn:** Phân tích nguyên nhân câu lệnh thống kê của Kế toán làm CPU vọt lên 100%, gây lock bảng 45 giây do bọc hàm `YEAR()` và `MONTH()` trên cột `created_at` (Non-SARGable) dẫn đến **Full Table Scan (`type = ALL`)** trên 5 triệu dòng.
+- **Tái cấu trúc câu truy vấn (Refactoring):** Chuyển đổi điều kiện sang dạng khoảng (Range condition SARGable): `created_at >= '2026-06-01' AND created_at < '2026-07-01'`.
+- **Thiết kế B-Tree Index chuẩn:** Xây dựng Composite Index `(transaction_type, created_at)` theo nguyên tắc Equality First, Range Second.
+- **Nâng cao Covering Index:** Thiết lập `idx_covering(transaction_type, created_at, amount)` để đạt trạng thái `Using where; Using index`, triệt tiêu 100% chi phí Disk I/O đọc bảng chính.
+
+### 📄 Tài liệu chi tiết:
+- File kịch bản MySQL: [`payflow_optimized.sql`](file:///d:/a/payflow_optimized.sql)
+- Báo cáo phân tích đối chiếu chỉ số EXPLAIN: [`explain_analysis.md`](file:///d:/a/explain_analysis.md)
+- Nhật ký tương tác AI (Prompt Log): [`ai_prompt_log.md`](file:///d:/a/ai_prompt_log.md#phần-4-dự-án-ví-điện-tử-payflow-tối-ưu-hóa-b-tree-index--sargable-query)
+- File nén nộp bài: [`payflow_submission.zip`](file:///d:/a/payflow_submission.zip)
 
 ---
 
