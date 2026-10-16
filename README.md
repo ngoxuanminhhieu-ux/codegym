@@ -38,6 +38,7 @@ Mã nguồn thực hành bài học Module 3 - Cơ sở dữ liệu quan hệ (R
 - [`er_activity_mapping.md`](file:///d:/a/er_activity_mapping.md): Báo cáo đối chiếu nghiệp vụ, phân tích 3 Data Gaps và giải trình cột `damage_fee`.
 - [`select-query.sql`](file:///d:/a/select-query.sql): File kịch bản các câu lệnh SELECT và JOIN truy vấn CSDL `QuanLySinhVien`.
 - [`query_quanlysinhvien.sql`](file:///d:/a/query_quanlysinhvien.sql): File kịch bản [Bài tập] Truy vấn dữ liệu nâng cao (LIKE, MONTH, BETWEEN, UPDATE, ORDER BY) trên CSDL `QuanLySinhVien`.
+- [`group-by.sql`](file:///d:/a/group-by.sql): File kịch bản [Thực hành] Sử dụng các hàm thông dụng trong SQL (COUNT, AVG, GROUP BY, HAVING, ALL) trên CSDL `QuanLySinhVien`.
 - [`flashmart_reports.sql`](file:///d:/a/flashmart_reports.sql): Kịch bản MySQL tối ưu hóa truy vấn LEFT JOIN cho Marketing và Anti-Join cho Kho vận Sàn TMĐT FlashMart.
 - [`join_analysis.md`](file:///d:/a/join_analysis.md): Báo cáo phân tích tập hợp (Set Theory), giải trình COUNT(o.order_id) vs COUNT(*) và 3 câu hỏi vấn đáp.
 - [`payflow_optimized.sql`](file:///d:/a/payflow_optimized.sql): Kịch bản MySQL tối ưu hóa truy vấn Non-SARGable và B-Tree Index cho Ví điện tử PayFlow.
@@ -567,6 +568,56 @@ File kịch bản: [`query_quanlysinhvien.sql`](file:///d:/a/query_quanlysinhvie
    JOIN Mark M ON S.StudentId = M.StudentId 
    JOIN Subject Sub ON M.SubId = Sub.SubId 
    ORDER BY M.Mark DESC, S.StudentName ASC;
+   ```
+
+---
+
+## 📊 [Thực hành] Sử dụng các hàm thông dụng trong SQL (QuanLySinhVien)
+
+File kịch bản: [`group-by.sql`](file:///d:/a/group-by.sql)
+
+### 💻 5 Bước thực hiện theo hướng dẫn:
+
+1. **Sử dụng CSDL `QuanLySinhVien`:**
+   ```sql
+   USE QuanLySinhVien;
+   ```
+
+2. **Hiển thị số lượng sinh viên ở từng nơi (`COUNT` + `GROUP BY`):**
+   ```sql
+   SELECT Address, COUNT(StudentId) AS 'Số lượng học viên'
+   FROM Student
+   GROUP BY Address;
+   ```
+
+3. **Tính điểm trung bình các môn học của mỗi học viên (`AVG`):**
+   ```sql
+   SELECT S.StudentId, S.StudentName, AVG(Mark) AS 'Điểm trung bình'
+   FROM Student S 
+   JOIN Mark M ON S.StudentId = M.StudentId
+   GROUP BY S.StudentId, S.StudentName;
+   ```
+
+4. **Hiển thị học viên có điểm trung bình lớn hơn 15 (`HAVING AVG(Mark) > 15`):**
+   ```sql
+   SELECT S.StudentId, S.StudentName, AVG(Mark) AS 'Điểm trung bình'
+   FROM Student S 
+   JOIN Mark M ON S.StudentId = M.StudentId
+   GROUP BY S.StudentId, S.StudentName
+   HAVING AVG(Mark) > 15;
+   ```
+
+5. **Hiển thị thông tin học viên có điểm trung bình lớn nhất (`HAVING ... >= ALL`):**
+   ```sql
+   SELECT S.StudentId, S.StudentName, AVG(Mark) AS 'Điểm trung bình cao nhất'
+   FROM Student S 
+   JOIN Mark M ON S.StudentId = M.StudentId
+   GROUP BY S.StudentId, S.StudentName
+   HAVING AVG(Mark) >= ALL (
+       SELECT AVG(Mark) 
+       FROM Mark 
+       GROUP BY Mark.StudentId
+   );
    ```
 
 ---
